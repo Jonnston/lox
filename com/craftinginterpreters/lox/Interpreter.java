@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-    final Enviorment globals = new Enviorment();
-    private Enviorment enviorment = globals;
+    final Enviornment globals = new Enviornment();
+    private Enviornment enviornment = globals;
 
     Interpreter() {
         globals.define("clock", new LoxCallable() {
@@ -46,6 +46,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             case MINUS:
                 checkNumberOperand(expr.operator, right);
                 return -(double)right;
+            default:
+                break;
         }
 
         // Unreachable
@@ -103,6 +105,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             case STAR:
                 checkNumberOperands(expr.operator, left, right);
                 return (double)left * (double)right;
+            default:
+                break;
         }
         // Unreachable
         return null;
@@ -169,38 +173,38 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             value = evaluate(stmt.initializer);
         }
 
-        enviorment.define(stmt.name.lexeme, value);
+        enviornment.define(stmt.name.lexeme, value);
         return null;
     }
 
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
-        return enviorment.get(expr.name);
+        return enviornment.get(expr.name);
     }
 
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
-        enviorment.assign(expr.name, value);
+        enviornment.assign(expr.name, value);
         return value;
     }
 
     @Override
     public Void visitBlockStmt(Stmt.Block stmt) {
-        executeBlock(stmt.statements, new Enviorment(enviorment));
+        executeBlock(stmt.statements, new Enviornment(enviornment));
         return null;
     }
 
-    void executeBlock(List<Stmt> statements, Enviorment enviorment) {
-        Enviorment previous = this.enviorment;
+    void executeBlock(List<Stmt> statements, Enviornment enviornment) {
+        Enviornment previous = this.enviornment;
         try {
-            this.enviorment = enviorment;
+            this.enviornment = enviornment;
 
             for (Stmt statement : statements) {
                 execute(statement);
             }
         } finally {
-            this.enviorment = previous;
+            this.enviornment = previous;
         }
     }
 
@@ -256,5 +260,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         return function.call(this, arguments);
+    }
+
+    @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
+        LoxFunction function = new LoxFunction(stmt, enviornment);
+        enviornment.define(stmt.name.lexeme, function);
+        return null;
+    }
+
+    @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.value != null) value = evaluate(stmt.value);
+
+        throw new Return(value);
     }
 }
