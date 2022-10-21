@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "inttypes.h": "c",
+        "stdint.h": "c",
+        "chunk.h": "c",
+        "common.h": "c",
+        "memory.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
+}
